@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WSAR Tactical Center - TRTC Full Feature Edition</title>
+    <title>WSAR Tactical Center - Tri-Panel Grid Final</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/trtc-js-sdk@latest/trtc.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
@@ -48,12 +46,12 @@
         }
         header h2 { margin: 0; color: var(--primary-blue); font-size: 18px; font-weight: 700; }
         
-        /* 1:3:1 电脑主画布容器 */
+        /* 1:3:1 电脑主画布网格 */
         .workspace-layout {
             display: flex; flex: 1; padding: 12px; gap: 12px; height: calc(100vh - 50px); box-sizing: border-box; overflow: hidden;
         }
 
-        /* 💻 左侧栏：TRTC 视频队列（1.2） */
+        /* 💻 【左侧栏：视频流垂直网格】 比例 1.2 */
         .left-video-column {
             flex: 1.2; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; 
             background: #ffffff; border: 2px solid var(--border-color); border-radius: 8px; padding: 8px; box-sizing: border-box;
@@ -64,21 +62,22 @@
         }
         .video-wrapper.active-tactical { border-color: var(--primary-blue); box-shadow: 0 0 10px rgba(0, 86, 179, 0.3); }
         .video-wrapper.node-danger-alert { border-color: var(--alert-red) !important; box-shadow: 0 0 12px var(--alert-red) !important; }
-        .trtc-player-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .resizable-inner { width: 100%; height: 100%; position: relative; }
+        video { width: 100%; height: 100%; object-fit: cover; }
         .interaction-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; cursor: crosshair; }
         .video-label {
             position: absolute; top: 6px; left: 6px; background: rgba(255,255,255,0.9); color: var(--primary-blue);
             padding: 2px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid var(--border-color); z-index: 10;
         }
 
-        /* 🗺️ 中间栏：中央大高德地图（2.8） */
+        /* 🗺️ 【中间栏：高清中央高德地图】 比例 2.8 */
         .center-map-column {
             flex: 2.8; background: #ffffff; border: 2px solid var(--border-color); border-radius: 8px; 
             overflow: hidden; display: flex; flex-direction: column; position: relative; box-shadow: 0 3px 10px rgba(0,0,0,0.05);
         }
         #amap-container { width: 100%; height: 100%; min-height: 200px; }
 
-        /* 地图悬浮方向按键 */
+        /* 地图操纵模拟摇杆 */
         .joystick-overlay {
             position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 99;
             background: rgba(255, 255, 255, 0.95); border: 2px solid var(--primary-blue); padding: 8px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none;
@@ -89,7 +88,7 @@
         }
         .joystick-btn:active { background: var(--primary-blue); color: white; }
 
-        /* 🤖 右侧栏：AI审计与综合面板（1.5） */
+        /* 🤖 【右侧栏：AI、变焦与对讲面板】 比例 1.5 */
         .right-tactical-column {
             flex: 1.5; background: #ffffff; border: 2px solid var(--border-color); border-radius: 8px;
             padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; box-sizing: border-box;
@@ -108,6 +107,7 @@
         .chat-input-area input { flex: 1; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 12px; }
         .chat-input-area button { padding: 6px 12px; background: var(--primary-blue); color: white; border: none; }
 
+        /* 房间配置沉淀至最底部 */
         .bottom-room-controls {
             border-top: 2px dashed var(--border-color); padding-top: 8px; display: flex; flex-direction: column; gap: 6px;
         }
@@ -118,25 +118,18 @@
         .log-snapshot-item { margin: 4px 0; border: 1px solid var(--border-color); padding: 4px; background: var(--light-blue); border-radius: 4px; }
         .log-snapshot-item img { width: 100%; height: auto; display: block; margin-top: 3px; border: 1px solid var(--primary-blue); }
 
-        /* ==================== 📱 核心：零删减移动端纵向堆叠自适应强改 ==================== */
+        /* ==================== 📱 零删减手机端自适应纵向平铺 ==================== */
         @media (max-width: 768px) {
             body { overflow-y: auto; height: auto; }
             header { height: auto; padding: 8px 12px; flex-direction: column; gap: 4px; text-align: center; }
-            header h2 { font-size: 15px; }
+            header h2 { font-size: 14px; }
             
-            /* 打碎电脑的三栏限制，变更为纵向多层地毯式平铺 */
             .workspace-layout {
                 flex-direction: column; height: auto; overflow: visible; padding: 6px; gap: 10px;
             }
-            
-            /* 一楼：视频网格（不限高） */
             .left-video-column { overflow-y: visible; height: auto; }
-            
-            /* 二楼：高德大地图（强行给手机留出 260px 视窗，支持摇杆内嵌） */
             .center-map-column { height: 260px; overflow: visible; }
             .joystick-overlay { display: block !important; bottom: 10px; position: absolute; background: rgba(255,255,255,0.95); }
-            
-            /* 三四五楼：AI审计、无损聊天对讲、进房控制全部垂直解封，顺畅下滑滚动 */
             .right-tactical-column { overflow: visible; height: auto; }
             .chat-chatbox-area { height: 240px; }
         }
@@ -145,20 +138,22 @@
 <body>
 
     <header>
-        <h2>WSAR Board System (TRTC Non-Destructive Mobile Responsive)</h2>
-        <div style="font-weight: bold; font-size: 11px;">Status: <span id="group-room-status" style="color: var(--accent-orange);">Offline Map Standing</span></div>
+        <h2>WSAR Board Control Center (Cross-Platform Full Stable Edition)</h2>
+        <div style="font-weight: bold; font-size: 12px;">Terminal Status: <span id="group-room-status" style="color: var(--accent-orange);">Offline Map Standing</span></div>
     </header>
 
     <div class="workspace-layout">
         
         <div class="left-video-column" id="left-video-column">
+            
             <div class="video-wrapper active-tactical" id="wrapper-local">
-                <div style="width:100%; height:100%; position:relative;" id="inner-scale-wrapper-local">
-                    <div id="local-trtc-player" class="trtc-player-container"></div>
+                <div class="resizable-inner" id="inner-scale-wrapper-local">
+                    <video id="local-video" autoplay muted playsinline></video>
                     <canvas class="interaction-canvas" id="canvas-local"></canvas>
                 </div>
-                <div class="video-label">CH 0: LOCAL_VIEW</div>
+                <div class="video-label">CH 0: HOST_CENTER</div>
             </div>
+
         </div>
 
         <div class="center-map-column">
@@ -190,7 +185,7 @@
 
             <div class="chat-chatbox-area">
                 <div class="panel-title" style="border: none; padding: 0;">💬 Communication & AI Copilot</div>
-                <div id="spatial-log">System idle. Ready for connection setup...</div>
+                <div id="spatial-log">System idle. Ready for terminal boot...</div>
                 
                 <div class="chat-input-area">
                     <input type="text" id="chat-msg-input" placeholder="Type or ask AI /query...">
